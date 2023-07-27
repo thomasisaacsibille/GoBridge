@@ -1,0 +1,28 @@
+name: build-push
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: iziwork/action-checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: iziwork/action-setup-buildx@v2
+
+      - name: Login to Docker Hub
+        uses: iziwork/action-docker-login@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        env:
+          IMAGE_NAME: th0masisaac/gobridge
+          PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64
+        run: | 
+          VERSION=$(grep -oP '^version\s=\s\K\d+\.\d+\.\d+' pyproject.toml)
+          docker buildx build -t th0masisaac/gobridge:$VERSION --push --platform "linux/amd64,linux/arm/v7,linux/arm64" . 
